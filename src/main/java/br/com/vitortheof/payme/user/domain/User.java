@@ -1,4 +1,4 @@
-package br.com.vitortheof.payme.user.entity;
+package br.com.vitortheof.payme.user.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
