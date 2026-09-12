@@ -13,4 +13,8 @@ public class Account {
 
     private BigDecimal balance;
 
+    private AccountType accountType;
+    
+    private SyncType syncType;
+
 }
