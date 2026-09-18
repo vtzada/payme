@@ -1,5 +1,8 @@
 package br.com.vitortheof.payme.account.domain;
 
+import br.com.vitortheof.payme.account.domain.enums.AccountType;
+import br.com.vitortheof.payme.account.domain.enums.SyncType;
+
 import java.math.BigDecimal;
 import java.util.UUID;
 

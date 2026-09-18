@@ -1,5 +1,7 @@
 package br.com.vitortheof.payme.transaction.domain;
 
+import br.com.vitortheof.payme.transaction.domain.enums.TransactionType;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
