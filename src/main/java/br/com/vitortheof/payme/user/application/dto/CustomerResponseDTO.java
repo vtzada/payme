@@ -1,8 +1,8 @@
-package br.com.vitortheof.payme.user.dto;
+package br.com.vitortheof.payme.user.application.dto;
 
 import java.util.UUID;
 
-public record UserResponseDTO(
+public record CustomerResponseDTO(
         UUID id,
         String name,
         String email
