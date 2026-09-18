@@ -1,4 +1,4 @@
-package br.com.vitortheof.payme.transaction.domain;
+package br.com.vitortheof.payme.transaction.domain.enums;
 
 public enum TransactionType {
     RECEITA,
