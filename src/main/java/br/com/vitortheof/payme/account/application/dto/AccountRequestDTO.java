@@ -4,6 +4,7 @@ import br.com.vitortheof.payme.account.domain.enums.AccountType;
 import br.com.vitortheof.payme.account.domain.enums.SyncType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -14,6 +15,7 @@ public record AccountRequestDTO(
         @NotBlank(message = "O nome da conta é obrigatório")
         String name,
         @NotNull(message = "O saldo inicial é obrigatório")
+        @PositiveOrZero
         BigDecimal initialBalance,
         @NotNull(message = "O tipo de conta é obrigatório")
         AccountType accountType,
