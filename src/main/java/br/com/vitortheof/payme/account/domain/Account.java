@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "account")
+@Table(name = "accounts")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -23,7 +23,7 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "costumer_id", nullable = false)
+    @Column(name = "customer_id", nullable = false)
     private UUID customerId;
 
     @Column(nullable = false)

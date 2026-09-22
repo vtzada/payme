@@ -1,6 +1,6 @@
-package br.com.vitortheof.payme.user.controller;
+package br.com.vitortheof.payme.user.api;
 
-import br.com.vitortheof.payme.AbstractIntegrationTest;
+import br.com.vitortheof.payme.shared.AbstractIntegrationTest;
 import br.com.vitortheof.payme.user.application.dto.CustomerRequestDTO;
 import br.com.vitortheof.payme.user.domain.Customer;
 import br.com.vitortheof.payme.user.infrastructure.CustomerRepository;
