@@ -5,6 +5,7 @@ import br.com.vitortheof.payme.account.application.dto.AccountRequestDTO;
 import br.com.vitortheof.payme.account.domain.enums.AccountType;
 import br.com.vitortheof.payme.account.domain.enums.SyncType;
 import br.com.vitortheof.payme.account.infrastructure.AccountRepository;
+import br.com.vitortheof.payme.transaction.infrastructure.TransactionRepository;
 import br.com.vitortheof.payme.user.domain.Customer;
 import br.com.vitortheof.payme.user.infrastructure.CustomerRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,8 +39,12 @@ public class AccountControllerIT extends AbstractIntegrationTest {
     @Autowired
     private AccountRepository accountRepository;
 
+    @Autowired
+    private TransactionRepository transactionRepository;
+
     @BeforeEach
     void cleanUp() {
+        transactionRepository.deleteAll();
         accountRepository.deleteAll();
         customerRepository.deleteAll();
     }

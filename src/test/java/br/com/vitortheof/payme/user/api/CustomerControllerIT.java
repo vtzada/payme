@@ -1,6 +1,8 @@
 package br.com.vitortheof.payme.user.api;
 
+import br.com.vitortheof.payme.account.infrastructure.AccountRepository;
 import br.com.vitortheof.payme.shared.AbstractIntegrationTest;
+import br.com.vitortheof.payme.transaction.infrastructure.TransactionRepository;
 import br.com.vitortheof.payme.user.application.dto.CustomerRequestDTO;
 import br.com.vitortheof.payme.user.domain.Customer;
 import br.com.vitortheof.payme.user.infrastructure.CustomerRepository;
@@ -31,8 +33,16 @@ public class CustomerControllerIT extends AbstractIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
+    private TransactionRepository transactionRepository;
+
     @BeforeEach
     void setUp() {
+        transactionRepository.deleteAll();
+        accountRepository.deleteAll();
         customerRepository.deleteAll();
     }
 
