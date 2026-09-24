@@ -36,27 +36,27 @@ public class TransactionService {
             }
         }
 
-        Transaction transaction = Transaction.builder()
-                .accountId(request.accountId())
-                .type(request.type())
-                .amount(request.amount())
-                .date(request.date())
-                .description(request.description())
-                .categoryId(request.categoryId())
-                .destinationAccountId(request.destinationAccountId())
-                .build();
+            Transaction transaction = Transaction.builder()
+                    .accountId(request.accountId())
+                    .type(request.type())
+                    .amount(request.amount())
+                    .date(request.date())
+                    .description(request.description())
+                    .categoryId(request.categoryId())
+                    .destinationAccountId(request.destinationAccountId())
+                    .build();
 
-        Transaction savedTransaction = transactionRepository.save(transaction);
+            Transaction savedTransaction = transactionRepository.save(transaction);
 
-        if (request.type() == TransactionType.TRANSFERENCIA) {
-            eventPublisher.publishEvent(new AccountBalanceChangedEvent(request.accountId(), request.amount().negate()));
-            eventPublisher.publishEvent(new AccountBalanceChangedEvent(request.destinationAccountId(), request.amount()));
-        } else {
-            BigDecimal delta = resolveDelta(request.type(), request.amount());
-            eventPublisher.publishEvent(new AccountBalanceChangedEvent(request.accountId(), delta));
+            if (request.type() == TransactionType.TRANSFERENCIA) {
+                eventPublisher.publishEvent(new AccountBalanceChangedEvent(request.accountId(), request.amount().negate()));
+                eventPublisher.publishEvent(new AccountBalanceChangedEvent(request.destinationAccountId(), request.amount()));
+            } else {
+                BigDecimal delta = resolveDelta(request.type(), request.amount());
+                eventPublisher.publishEvent(new AccountBalanceChangedEvent(request.accountId(), delta));
+            }
+            return transactionMapper.toResponse(savedTransaction);
         }
-        return transactionMapper.toResponse(savedTransaction);
-    }
 
     public List<TransactionResponseDTO> findAllByAccountId(UUID accountId) {
         return transactionRepository.findAllByAccountId(accountId)
