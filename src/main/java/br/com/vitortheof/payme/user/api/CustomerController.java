@@ -22,7 +22,6 @@ public class CustomerController {
     @PostMapping("/register")
     public ResponseEntity<CustomerResponseDTO> register(@Valid @RequestBody CustomerRequestDTO request){
         CustomerResponseDTO response = customerService.register(request);
-
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

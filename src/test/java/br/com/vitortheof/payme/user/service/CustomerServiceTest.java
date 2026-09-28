@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -33,6 +34,9 @@ public class CustomerServiceTest {
     @Mock
     private CustomerMapper customerMapper;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     @Test
     @DisplayName("Deve registrar com sucesso um novo cliente")
     void shouldRegisterSucessfully() {
@@ -42,6 +46,7 @@ public class CustomerServiceTest {
         var responseDto = new CustomerResponseDTO(UUID.randomUUID(), "Vitor", "vitor@gmail.com");
 
         when(customerRepository.findByEmail(request.email())).thenReturn(Optional.empty());
+        when(passwordEncoder.encode(request.password())).thenReturn("encodedPassword");
         when(customerRepository.save(any(Customer.class))).thenReturn(customer);
         when(customerMapper.toResponse(any(Customer.class))).thenReturn(responseDto);
 

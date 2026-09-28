@@ -19,9 +19,9 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
 
-    public AccountResponseDTO create(AccountRequestDTO request) {
+    public AccountResponseDTO create(AccountRequestDTO request, UUID customerId) {
         Account account = Account.builder()
-                .customerId(request.customerId())
+                .customerId(customerId)
                 .name(request.name())
                 .balance(request.initialBalance())
                 .accountType(request.accountType())

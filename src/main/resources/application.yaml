@@ -4,9 +4,13 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/payme
     username: postgres
-    password: 123
+    password: "123"
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: validate
     show-sql: true
+api:
+  security:
+    token:
+      secret: "${API_SECURITY_TOKEN_SECRET:paymechavesupersecretajamaisvista}"

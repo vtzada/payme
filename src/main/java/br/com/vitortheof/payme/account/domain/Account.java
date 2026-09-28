@@ -40,6 +40,9 @@ public class Account {
     @Column(name = "sync_type", nullable = false)
     private SyncType syncType;
 
+    @Version
+    private Long version;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

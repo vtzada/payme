@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # Serviço do Banco de Dados
+  payme-db:
+    image: postgres:16-alpine
+    container_name: payme-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${DB_NAME:-payme_db}
+      POSTGRES_USER: ${DB_USER:-payme_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-payme_password}
+    volumes:
+      - payme-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Serviço da API Spring Boot
+  payme-api:
+    build: .
+    container_name: payme-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      payme-db:
+        condition: service_healthy # Só sobe a API quando o banco de dados der "OK"
+    environment:
+      # O Docker injeta essas variáveis, substituindo o que está no seu application.yaml
+      # Valores vêm do .env (mesma pasta, carregado automaticamente) com fallback local
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://payme-db:5432/${DB_NAME:-payme_db}
+      - SPRING_DATASOURCE_USERNAME=${DB_USER:-payme_user}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-payme_password}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
+      # Sobrescreve api.security.token.secret (nunca commitar o valor real)
+      - API_SECURITY_TOKEN_SECRET=${API_SECURITY_TOKEN_SECRET:-troque-este-segredo-em-producao}
+
+volumes:
+  payme-data:

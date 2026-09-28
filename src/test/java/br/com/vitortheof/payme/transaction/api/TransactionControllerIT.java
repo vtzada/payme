@@ -8,6 +8,7 @@ import br.com.vitortheof.payme.shared.AbstractIntegrationTest;
 import br.com.vitortheof.payme.transaction.application.dto.TransactionRequestDTO;
 import br.com.vitortheof.payme.transaction.domain.enums.TransactionType;
 import br.com.vitortheof.payme.transaction.infrastructure.TransactionRepository;
+import br.com.vitortheof.payme.user.application.auth.TokenService;
 import br.com.vitortheof.payme.user.domain.Customer;
 import br.com.vitortheof.payme.user.infrastructure.CustomerRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -48,11 +49,24 @@ public class TransactionControllerIT extends AbstractIntegrationTest {
     @Autowired
     private TransactionRepository transactionRepository;
 
+    @Autowired
+    private TokenService tokenService;
+
+    private Customer customerLogado;
+    private String token;
+
     @BeforeEach
     void cleanUp() {
         transactionRepository.deleteAll();
         accountRepository.deleteAll();
         customerRepository.deleteAll();
+
+        customerLogado = customerRepository.save(Customer.builder()
+                .name("Teste")
+                .email(UUID.randomUUID() + "@gmail.com")
+                .password("senha123")
+                .build());
+        token = tokenService.generateToken(customerLogado);
     }
 
     @Test
@@ -65,6 +79,7 @@ public class TransactionControllerIT extends AbstractIntegrationTest {
                 LocalDateTime.now(), "Salário", null, null);
 
         mockMvc.perform(post("/transactions")
+                        .header("Authorization", "Bearer " + token)
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -85,6 +100,7 @@ public class TransactionControllerIT extends AbstractIntegrationTest {
                 LocalDateTime.now(), "Mercado", null, null);
 
         mockMvc.perform(post("/transactions")
+                        .header("Authorization", "Bearer " + token)
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
@@ -106,6 +122,7 @@ public class TransactionControllerIT extends AbstractIntegrationTest {
                 LocalDateTime.now(), "Nubank -> Santander", null, destino);
 
         mockMvc.perform(post("/transactions")
+                        .header("Authorization", "Bearer " + token)
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
@@ -124,6 +141,7 @@ public class TransactionControllerIT extends AbstractIntegrationTest {
                 LocalDateTime.now(), "Transferência inválida", null, null);
 
         mockMvc.perform(post("/transactions")
+                        .header("Authorization", "Bearer " + token)
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -139,6 +157,7 @@ public class TransactionControllerIT extends AbstractIntegrationTest {
                 LocalDateTime.now(), "Valor inválido", null, null);
 
         mockMvc.perform(post("/transactions")
+                        .header("Authorization", "Bearer " + token)
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -154,10 +173,17 @@ public class TransactionControllerIT extends AbstractIntegrationTest {
         var t2 = new TransactionRequestDTO(accountId, TransactionType.DESPESA, new BigDecimal("50.00"),
                 LocalDateTime.now(), "Despesa 1", null, null);
 
-        mockMvc.perform(post("/transactions").contentType("application/json").content(objectMapper.writeValueAsString(t1)));
-        mockMvc.perform(post("/transactions").contentType("application/json").content(objectMapper.writeValueAsString(t2)));
+        mockMvc.perform(post("/transactions")
+                .header("Authorization", "Bearer " + token)
+                .contentType("application/json").content(objectMapper.writeValueAsString(t1)))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/transactions")
+                .header("Authorization", "Bearer " + token)
+                .contentType("application/json").content(objectMapper.writeValueAsString(t2)))
+                .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/transactions/account/{accountId}", accountId))
+        mockMvc.perform(get("/transactions/account/{accountId}", accountId)
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[*].description", containsInAnyOrder("Receita 1", "Despesa 1")));
@@ -168,21 +194,71 @@ public class TransactionControllerIT extends AbstractIntegrationTest {
     void deveRetornarListaVaziaQuandoContaSemTransacoes() throws Exception {
         UUID accountId = criarConta(new BigDecimal("1000.00"));
 
-        mockMvc.perform(get("/transactions/account/{accountId}", accountId))
+        mockMvc.perform(get("/transactions/account/{accountId}", accountId)
+                        .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
     }
 
-    private UUID criarConta(BigDecimal saldoInicial) {
-        Customer customer = Customer.builder()
-                .name("Teste")
+    @Test
+    @DisplayName("Deve retornar 401 quando sem token")
+    void deveRetornar401QuandoSemToken() throws Exception {
+        UUID accountId = criarConta(new BigDecimal("1000.00"));
+
+        mockMvc.perform(get("/transactions/account/{accountId}", accountId))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Deve retornar 404 ao usar conta de outro customer (IDOR)")
+    void deveRetornar404QuandoContaDeOutroCustomer() throws Exception {
+        Customer outro = customerRepository.save(Customer.builder()
+                .name("Outro")
                 .email(UUID.randomUUID() + "@gmail.com")
                 .password("senha123")
-                .build();
-        UUID customerId = customerRepository.save(customer).getId();
+                .build());
+        Account contaAlheia = accountRepository.save(Account.builder()
+                .customerId(outro.getId())
+                .name("Conta alheia")
+                .balance(new BigDecimal("1000.00"))
+                .accountType(AccountType.CORRENTE)
+                .syncType(SyncType.MANUAL)
+                .build());
 
+        var request = new TransactionRequestDTO(
+                contaAlheia.getId(), TransactionType.RECEITA, new BigDecimal("100.00"),
+                LocalDateTime.now(), "Tentativa IDOR", null, null);
+
+        mockMvc.perform(post("/transactions")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
+
+        mockMvc.perform(get("/transactions/account/{accountId}", contaAlheia.getId())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Deve retornar 400 quando DESPESA supera o saldo")
+    void deveRetornar400QuandoSaldoInsuficiente() throws Exception {
+        UUID accountId = criarConta(new BigDecimal("100.00"));
+
+        var request = new TransactionRequestDTO(
+                accountId, TransactionType.DESPESA, new BigDecimal("500.00"),
+                LocalDateTime.now(), "Compra grande", null, null);
+
+        mockMvc.perform(post("/transactions")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    private UUID criarConta(BigDecimal saldoInicial) {
         Account account = Account.builder()
-                .customerId(customerId)
+                .customerId(customerLogado.getId())
                 .name("Conta Teste")
                 .balance(saldoInicial)
                 .accountType(AccountType.CORRENTE)
@@ -192,4 +268,3 @@ public class TransactionControllerIT extends AbstractIntegrationTest {
         return accountRepository.save(account).getId();
     }
 }
-

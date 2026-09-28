@@ -10,8 +10,6 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public record AccountRequestDTO(
-        @NotNull(message = "O ID do cliente é obrigatório")
-        UUID customerId,
         @NotBlank(message = "O nome da conta é obrigatório")
         String name,
         @NotNull(message = "O saldo inicial é obrigatório")

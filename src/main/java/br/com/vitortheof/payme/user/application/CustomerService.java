@@ -7,6 +7,7 @@ import br.com.vitortheof.payme.user.application.dto.CustomerRequestDTO;
 import br.com.vitortheof.payme.user.application.dto.CustomerResponseDTO;
 import br.com.vitortheof.payme.user.infrastructure.CustomerRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,6 +16,7 @@ public class CustomerService {
 
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
+    private final PasswordEncoder passwordEncoder;
 
     public CustomerResponseDTO register(CustomerRequestDTO request) {
 
@@ -27,7 +29,7 @@ public class CustomerService {
         Customer c = Customer.builder()
                 .name(request.name())
                 .email(request.email())
-                .password(request.password())
+                .password(passwordEncoder.encode(request.password()))
                 .build();
 
         customerRepository.save(c);
